@@ -1,0 +1,208 @@
+---
+title: "Irrigated Areas 2009-2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+
+## This code used to exist in the scwateruse package.
+## The scwateruse package was used to develop the Pellett 2020 JSCWRC  article.
+## This code lives in the sccenterpivot package now.
+## Run it once, then join on more updated spatial datasets as needed
+## e.g. Sekaran and Payero 2022.
+```
+
+
+# IRRIGATION ZONES
+The irrigation_zones shapefile contains polygon features mapped using Google Earth Engine (GEE) as part of an academic research study. The year of the GEE imagery in which these features were identified is not noted in this data, but is presumably recent (2017-2019). The zones were delineated manually after identification of irrigation infrastructure (typically a visible truss system represented by a thin, light gray, line; often with towers, pivot point, and tracks clearly visible) or evidence of irrigation infrastructure (evenly spaced concentric circular tracks adjacent to canopy which could mask a truss system). The polygons correspond to a sample of cultivated areas directly overlaying the maximum extent of irrigation infrastructure, including ditches traversable by the irrigation infrastructure. Forested areas, paved roads, and wetlands were generally excluded.  Areas irrigated by traveling gun or by end guns would be left out of the sample.
+
+There are several different types of irrigation zones. Most are center pivots, and some other types have not been identified. Some other types of irrigation zones (for example, linear move) may have been mis-classified as center pivot type. 
+
+There were some cases where the pivot points and arrangement of irrigation infrastructure changed over time. If there was evidence of irrigation across most of the GEE-based delineation, then it was coded as existing irrigation for that year (despite changes in the setup of one or more center pivots or other kinds of irrigation within the delineated area).
+
+
+```{r zones}
+i_zones0 <- sf::st_read(
+  "DNR-irrigationZones//irrigation_zones.shp") %>%
+  dplyr::mutate(ZoneID=1:dplyr::n()) %>%
+  dplyr::select(ZoneID, Type=notes, County=COUNTYNM, Acres,
+         year2009, year2011, year2013, year2015, year2017)
+
+```
+```{r eval=F}
+dplyr::filter(i_zones0, !sf::st_is_valid(geometry))
+
+## There is an invalid feature (?)
+```
+
+```{r}
+i_zones1 <- i_zones0 %>%
+  sf::st_make_valid() %>%
+  sf::st_transform(4326)
+
+```
+
+
+```{r}
+### One of the zones has a sliver that makes it a multi-polygon...
+fix_zone <- dplyr::filter(i_zones1, ZoneID==2298) %>% 
+  sf::st_cast('POLYGON') %>% 
+  dplyr::mutate(., area = sf::st_area(.)) %>%
+  dplyr::filter(area > units::set_units(20, 'm^2')) %>%
+  dplyr::select(-area)
+
+i_zones2 <- dplyr::filter(i_zones1, ZoneID!=2298) %>%
+  sf::st_cast('POLYGON') %>%
+  dplyr::bind_rows(fix_zone) %>%
+  dplyr::arrange(ZoneID)
+```
+
+
+```{r}
+# unique(i_zones2$year2009) ## 1s and 0s, as it should be.
+# sum(is.na(i_zones2$year2009)) ## 0, as it should be
+
+# sf::st_crs(i_zones) <- 4326
+
+i_zones3 <- i_zones2 %>%
+  dplyr::mutate(year2018 = 1,
+                year2009 = as.integer(year2009),
+                Type = as.character(Type))
+
+```
+
+
+
+
+```{r}
+sf::sf_use_s2(FALSE)
+
+## recalculate polygon acreage.
+i_acres <- sf::st_area(i_zones3) %>%
+  units::set_units("acre") %>%
+  units::drop_units(.)
+
+i_zones4 <- i_zones3
+
+i_zones4$Acres <- i_acres
+
+## It has been a while, and I don't recall why acreage would need to be recalculated...
+## Well, for the multi-polygon addressed in i_zones2 maybe?
+## Or, because there was some editing done in ArcMap..
+## Would be straightforward to check, but I'm not too worried about it.
+```
+
+
+
+# CENTER PIVOT POINTS
+The pivot_points shapefile contains point features associated with the central pivot point of irrigation zones of the center pivot type. 
+
+```{r}
+pivot_pts0 <- sf::st_read("DNR-irrigationZones//pivot_points.shp") # %>%
+  # dplyr::mutate(PointID = 1:dplyr::n()) %>% ## This already got calculated.
+  # dplyr::select(-Type)
+
+unique(pivot_pts0$Type) ## "pivot point"  "pivot points" NA 
+sum(is.na(pivot_pts0$Type)) ## 283 ?? should probably check on those.
+
+
+pivot_pts1 <- sf::st_transform(pivot_pts0, 4326)
+
+# Join the pivot points to their irrigation zones.
+pivot_pt_join <- sf::st_within(
+  x=pivot_pts1, y=i_zones1, sparse=TRUE, prepared=FALSE) %>%
+  as.list() %>% 
+  lapply(c) %>%
+  dplyr::tibble(PointID=pivot_pts1$PointID,
+         ZoneID=.) %>%
+  tidyr::unnest(cols=c(ZoneID))
+
+## some pts aren't in a zone, 1 is in 2 zones ??
+
+# sum(duplicated(i_pt_join$PointID)) ## 0
+# sum(duplicated(i_pt_join$ZoneID)) ## 0
+
+pivot_pts2 <- dplyr::left_join(pivot_pts1, pivot_pt_join)
+```
+
+```{r}
+pivot_pts2020 <- pivot_pts2
+
+usethis::use_data(pivot_pts2020, overwrite=TRUE)
+```
+
+```{r}
+## assign polygons with pivot points as center pivot type.
+## there is only 1 such error...
+sum(is.na(i_zones4$Type))
+i_zones5 <- i_zones4 %>%
+  dplyr::mutate(Type2 = dplyr::if_else(
+    ZoneID %in% pivot_pts2$ZoneID, "Center Pivot", Type))
+sum(is.na(i_zones5$Type2))
+
+```
+
+
+```{r}
+overlaps <- i_zones5 %>%
+  sf::st_intersection() %>%
+  dplyr::filter(n.overlaps > 1)  %>%
+  sf::st_collection_extract('POLYGON') %>%
+  dplyr::mutate(Acres0 = units::drop_units(
+    sf::st_area(geometry)/4046.86)) %>% 
+  dplyr::filter(Acres0 > 0) %>%
+  tidyr::unnest_wider(origins) %>%
+  dplyr::select(-...1) %>%
+  dplyr::rename(ZoneID1=ZoneID, ZoneID2=...2)
+
+# max(overlaps$Acres0) ## 0.0001 acres (less than 5 square feet)
+## These overlaps are probably stemming from the reprojection.
+
+# dplyr::filter(overlaps, ZoneID1 != ...1) ## 0 rows
+```
+
+
+```{r eval=F}
+# sf::st_write(overlaps, 'irrigation_zones2020_overlap.shp', delete_layer=T)
+
+## I used QGIS to view the overlaps and edit the raw data file irrigation_zones.shp
+```
+
+
+
+```{r}
+irrigation_zones2020 <- i_zones5
+
+usethis::use_data(irrigation_zones2020, overwrite=TRUE)
+
+rm(fix_zone)
+# i_withdrawals <- st_read("sourcefiles//DNR-irrigationZones//agwithdrawals.shp")
+
+## i_pipes should go from a pipe to a pivot point inside a zone...
+
+```
+
+
+# LINEAR JOINS
+The irrigation_pipes shapefile contains line features created in ArcMap to join agwithdrawals to pivot_points. There is significant uncertainty in the accuracy of these joins. The "Snap Features" option was used, so spatial precision should be equal to the point data used. Should verify this.
+```{r}
+## Something is wrong with the joins. They don't have columns. Neither do the pivot points.
+## Actually, that might have been how I digitized them in the first place.
+i_joins0 <- sf::st_read(
+  "DNR-irrigationZones//irrigation_pipes.shp",
+  stringsAsFactors=FALSE) %>%
+  dplyr::rename(PermitID=PermtID)
+
+i_joins1 <- sf::st_transform(i_joins0, 4326)
+```
+
+
+```{r}
+irrigation_joins2020 <- i_joins1
+
+usethis::use_data(irrigation_joins2020, overwrite=TRUE)
+```
+
+

@@ -1,0 +1,122 @@
+---
+title: "Payero and Sekaran review"
+author: "C A Pellett"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+```{r}
+pivots0 <- readr::read_csv("SC_Pivots_2021_Lat_Lon2.csv")
+
+```
+
+The research by Payero and Sekaran resulted in a table of center pivots with `r nrow(pivots0)` rows and `r ncol(pivots0)` columns: `r names(pivots0)`.
+
+Strange that the file name indicates the data is for 2021, but the MapYear column indicates 2022.
+
+# id Column
+```{r}
+scutils::dupes(pivots0, 'id') # %>% View()
+## There are many duplicate id's.
+
+scutils::dupes(pivots0, c('Long', 'Lat'))
+## But there aren't any duplicate locations.
+```
+There are many duplicate values in the id column, but there aren't any duplicate locations according to the Lat and Long columns.
+
+# Length columns
+```{r}
+ggplot2::qplot(pivots0$length_ft, pivots0$WetRad_ft)
+
+```
+This looks about right. The wetted radius is almost always equal or greater than the pivot length, because end guns irrigate beyond the physical footprint of the pivot.
+
+# The Number of Towers
+```{r}
+ggplot2::qplot(pivots0$NumTowers)
+
+```
+Looks about right to me.
+
+# The Degrees of rotation
+```{r}
+ggplot2::qplot(pivots0$Degrees)
+
+```
+Looks about right to me.
+
+# Comments
+```{r}
+dplyr::filter(pivots0, !is.na(Comment))
+
+```
+For some reason the comments say "Corner system", but the Degrees is 360. Strange. I guess corner system doesn't mean what I think it means.
+
+# CountyName Column
+```{r}
+unique(pivots0$CountyName)
+## todo: test this with a spatial join.
+```
+Looks right. I could test this with a spatial join.
+
+# Spatial Coordinates
+```{r}
+ggplot2::qplot(pivots0$Long, pivots0$Lat)
+
+```
+Looks about right to me.
+
+## MapYear 
+```{r}
+unique(pivots0$MapYear)
+
+```
+The only value in this column is 2022. Yet, the file name indicates 2021.
+
+
+```{r}
+pivot_pts2022 <- pivots0 %>%
+  dplyr::select(-id, -MapYear) %>%
+  dplyr::mutate(
+    PointID = 1:n(),
+    length_ft = units::set_units(length_ft, 'ft'),
+    WetRad_ft = units::set_units(WetRad_ft, 'ft')) %>%
+  sf::st_as_sf(coords=c('Long', 'Lat'), crs=4326)
+
+```
+
+```{r}
+## Calculate Area (acres)
+## st_area returns m2 for this CRS.
+
+pivot_circles2022 <- pivot_pts2022 %>%
+  sf::st_buffer(., dist=.$length_ft, nQuadSegs=6) %>%
+  dplyr::mutate(Acres = units::drop_units(
+    sf::st_area(geometry)*(Degrees/360)/4046.86)) 
+
+pivot_wetted2022 <- pivot_pts2022 %>%
+  sf::st_buffer(., .$WetRad_ft, nQuadSegs=6) %>%
+  dplyr::mutate(Acres = units::drop_units(
+    sf::st_area(geometry)*(Degrees/360)/4046.86))
+
+```
+
+
+```{r}
+usethis::use_data(pivot_pts2022, overwrite=T)
+
+usethis::use_data(pivot_circles2022, overwrite=T)
+
+usethis::use_data(pivot_wetted2022, overwrite=T)
+
+
+## write shapefiles or geoJSON or whatever.
+
+```
+
+

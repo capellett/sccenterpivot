@@ -1,0 +1,468 @@
+---
+title: "03_combined.Rmd"
+author: "C A Pellett"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(units)
+```
+
+# Spatial overlay 
+Spatial joins are used to combine the two editions of data. The result is a new column for each dataset which holds an identifier key for each irrigation distribution system.
+
+
+```{r}
+load("~/Rpackages/sccenterpivot/data/pivot_pts2020.rda")
+load("~/Rpackages/sccenterpivot/data/pivot_pts2022.rda")
+
+pts.a0 <- pivot_pts2020 %>%
+  dplyr::rename(id.a = PointID) %>%
+    sf::st_transform(32133) ## SC State Plane NAD83
+
+
+pts.b0 <- pivot_pts2022 %>%
+  dplyr::rename(id.b = PointID) %>%
+  sf::st_transform(32133) ## SC State Plane NAD83 
+```
+
+## Combine the pivot points.
+
+```{r}
+
+nearest_pts.a <- sf::st_nearest_feature(pts.a0, pts.b0)
+
+distance_pts.a <- sf::st_distance(pts.a0, pts.b0[nearest_pts.a,], by_element = TRUE)
+
+pts.a1 <- pts.a0 %>%
+  dplyr::mutate(
+    nearest.b = pts.b0[nearest_pts.a, 'id.b', drop=T],
+    distance.b = distance_pts.a)
+
+## ggplot2::qplot(distance_pts.a)
+#### like 90% are less than 10 meters, so that is good. 
+#### the very high values should probably be dropped.
+
+```
+
+
+```{r}
+nearest_pts.b <- sf::st_nearest_feature(pts.b0, pts.a0)
+
+distance_pts.b <- sf::st_distance(pts.b0, pts.a0[nearest_pts.b,], by_element = TRUE)
+
+pts.b1 <- pts.b0 %>%
+  dplyr::mutate(
+    nearest.a = pts.a0[nearest_pts.b, 'id.a', drop=T],
+    distance.a = distance_pts.b)
+
+```
+
+```{r}
+joinsa.0 <- pts.a1[, c('id.a', 'nearest.b', 'distance.b'), drop=T]
+
+joinsa.1 <- joinsa.0 %>%
+  dplyr::group_by(nearest.b) %>%
+  dplyr::filter(distance.b == min(distance.b)) %>%
+  dplyr::ungroup() %>%
+  dplyr::mutate(id.a = as.character(id.a),
+                nearest.b = as.character(nearest.b))
+
+joinsb.0 <- pts.b1[, c('id.b', 'nearest.a', 'distance.a', 'length_ft'), drop=T] 
+
+joinsb.1 <- joinsb.0 %>%
+  dplyr::group_by(nearest.a) %>%
+  dplyr::filter(distance.a == min(distance.a)) %>%
+  dplyr::ungroup() %>%
+  dplyr::mutate(id.b = as.character(id.b),
+                nearest.a = as.character(nearest.a))
+
+joinsb.2 <- joinsb.1 %>%
+  dplyr::filter(distance.a < length_ft)
+
+joins_perfect_pt <- joinsb.2 %>%
+  dplyr::inner_join(joinsa.1, by=c('id.b'='nearest.b', 'nearest.a'='id.a')) %>%
+  dplyr::filter(distance.a == distance.b) %>%
+  dplyr::select(id.a=nearest.a, id.b, distance=distance.a) %>%
+  dplyr::left_join(
+    dplyr::select(pivot_pts2020, id.a=PointID, ZoneID) %>%
+      dplyr::mutate(id.a = as.character(id.a)),
+    'id.a')
+## Convert these to lines.
+
+```
+
+If two points are nearest to each other, and the distance between them is less than the length_ft, and the pt.b is within the irrigation zone, then you can probably figure they are the same point.
+
+## Combine the Zones
+```{r}
+load("~/Rpackages/sccenterpivot/data/irrigation_zones2020.rda")
+load("~/Rpackages/sccenterpivot/data/pivot_circles2022.rda")
+```
+
+```{r}
+zones.a <- irrigation_zones2020 %>%
+  dplyr::rename(id.a = ZoneID) %>%
+    # sf::st_transform(32133)  %>% ## SC State Plane NAD83
+  sf::st_make_valid()
+
+zones.b <- pivot_circles2022 %>%
+  dplyr::rename(id.b = PointID) %>%
+    # sf::st_transform(32133) %>%
+  sf::st_make_valid()
+```
+The two datasets of mapped irrigation (Pellett 2020, and Sekaran and Payero 2022) are combined to allow for analysis of change over time. While the first dataset (Pellett 2020) includes approximate polygons of irrigated area, the second dataset (Sekaran and Payero 2022) includes point locations, pivot lengths, and pivot degrees. The point locations have been buffered by the pivot lengths to create circular polygons, and acreage irrigated is estimated using the pivot degrees. Because there is no information on the bearing of the semi-circular pivots, the circular polygons which represent semi-circular pivots require additional editing.
+
+Various geographic intersections are developed in order to properly combine the two datasets.
+
+### Self-Intersection
+```{r eval=F}
+## This code is included in 01_Pellett_2020_prep.Rmd
+
+# overlaps.a <- zones.a %>%
+#   sf::st_intersection() %>%
+#   dplyr::filter(n.overlaps > 1)  %>%
+#   sf::st_collection_extract('POLYGON') %>%
+#   dplyr::mutate(Acres0 = units::drop_units(
+#     sf::st_area(geometry)/4046.86)) %>% 
+#   dplyr::filter(Acres0 > 0) %>%
+#   tidyr::unnest_wider(origins) %>%
+#   dplyr::select(-...1) %>%
+#   dplyr::rename(ZoneID1=ZoneID, ZoneID2=...2)
+
+## The result is 24 polygons, each less than 5 sqft
+
+```
+
+
+```{r}
+## There are some pivots that lie entirely within other pivots.
+within.b <- zones.b %>%
+  dplyr::mutate(within = sf::st_within(geometry),
+                length.within = lengths(within)) %>%
+  dplyr::filter(length.within > 1)
+
+## I can drop them from this analysis.
+zones.b1 <- zones.b %>% 
+  dplyr::filter(!(id.b %in% within.b$id.b))
+## I did this, but I shouldn't have.
+## they smaller pivots aren't necessarily actually located within the larger pivot area.
+## remember, these polygons are circular buffers of points, 
+## not accurate representations of the pivot's range of motion.
+## Hopefully, I spotted any relevant smaller neighboring pivots,
+## and included them in unjoined_a.shp
+
+
+overlaps.b <- zones.b1 %>%
+  sf::st_intersection() %>%
+  dplyr::filter(n.overlaps > 1)  
+## 942 self-intersections.
+
+```
+
+```{r eval=F}
+## This should select the POLYGONS from multifeatures.
+overlaps.b1 <- overlaps.b %>%
+  sf::st_collection_extract('POLYGON') 
+
+
+overlaps.b2 <- overlaps.b1 %>%
+  dplyr::mutate(
+    Acres0 = units::drop_units(
+      sf::st_area(geometry)/4046.86),
+    n = lengths(origins)) %>%
+  dplyr::filter(Acres0 > 0) 
+
+unique(overlaps.b2$n)
+```
+Some zones overlap other zones in the same dataset. This could confound subsequent steps of the analysis.
+
+
+### Zones with zero intersections
+If a zone touches 0 zones from the other dataset, and does not correspond to a joined point, then that is an unjoined zone.
+
+```{r eval=F}
+# zones.c0 <- sf::st_intersection(zones.a, zones.b1)
+# saveRDS(zones.c0, 'zones_c0.rds')
+
+## This sometimes (but not always??) takes a really long time to run.
+```
+
+```{r}
+zones.c0 <- readRDS('zones_c0.rds')
+
+```
+
+```{r}
+zones.c1 <- sf::st_make_valid(zones.c0)
+
+```
+
+```{r}
+
+unjoined.a0 <- zones.a %>%
+  dplyr::filter(!(id.a %in% zones.c0$id.a))
+## 277 entries
+
+unjoined.a1 <- unjoined.a0 %>%
+  dplyr::filter(!(id.a %in% joins_perfect_pt$ZoneID))
+## still 277 entries, good.
+## So, there are 2,698 - 277 = 2,421 zones in 2020 that might match a zone in 2022.
+
+unjoined.b0 <- zones.b %>%
+  dplyr::filter(!(id.b %in% zones.c0$id.b))
+## 501 entries
+
+unjoined.b1 <- unjoined.b0 %>%
+  dplyr::filter(!(id.b %in% joins_perfect_pt$id.b))
+## 494 entries. So, 7 entries are joined to a point but not a zone... hm...
+## There are 2,980 - 494 = 2,486 zones in 2022 that might match a zone in 2020.
+
+
+```
+Export to QGIS and inspect each unjoined zone with imagery. If a 2020 zone is absent from imagery, flag that by deleting the feature from the shapefile. Import the shapefile back to R. Assign year_2020 values to unjoined.a by joining back to shapefile.
+
+Unjoined.b geometries are edited to reflect the partial circles.
+
+```{r eval=F}
+# sf::st_write(unjoined.a1, 'unjoined_a1.shp')
+## I deleted several shapes which no longer exist. 
+## I also added some, and I may have modified a few.
+
+# sf::st_write(unjoined.b1, 'unjoined_b1.shp')
+## Double Check these in QGIS.
+## I may have deleted a few that didn't seem active (solar panels)
+
+## update unjoined.a and unjoined.b with the shapefiles from qgis.
+
+## recreate these, but with fewer vertices, so its easier to edit.
+```
+
+TODO: Read in unjoined.a1. 
+Geometries that are deleted from unjoined.a1 are 2020 & 2021 FALSE.
+New zones in unjoined.a1 are 2021 TRUE.
+(Filter out Georgia zones)
+Edited geometries in unjoined.a1 take precedent.
+
+Read in unjoined.b1.
+Geometries that are deleted are 2021 FALSE.
+Edited geometries take precedent.
+
+### One-to-one Intersections
+If a single zone from A and a single zone from B intersect with each other and not with any other zone, and the estimated acreages are close, and the overlap is significant, then that would be a perfect zonal join.
+```{r eval=F}
+## This used to work, but doesn't anymore :(
+joins_zone0 <- zones.c0 %>%
+  dplyr::filter(
+    !scutils::duplicated2(id.a) & 
+      !scutils::duplicated2(id.b)) %>%
+  dplyr::mutate(
+    Acres_difference = abs(Acres-Acres.1),
+    Acres_average = (Acres + Acres.1)/2,
+    Acres_overlap = units::drop_units(sf::st_area(geometry)/4046.86),
+    Acres_percent_difference = Acres_difference/Acres_average,
+    Overlap_percent = 1 - ((Acres - Acres_overlap)/Acres),
+    id.b=as.character(id.b),
+    join_score = 1 - ((1-Acres_percent_difference)*Overlap_percent)) %>%
+  dplyr::rename(ZoneID = id.a) %>%
+  dplyr::left_join(
+    joins_perfect_pt %>%
+      sf::st_drop_geometry() %>%
+      dplyr::mutate(distance_m = units::drop_units(distance)) %>%
+      dplyr::select(ZoneID, id.b, distance) %>%
+      dplyr::filter(!is.na(ZoneID)),
+    by=c('ZoneID', 'id.b'))
+
+## Acres_overlap compares the full circle of the 2022 buffered points.
+
+# ggplot2::qplot(
+#   x=joins_zone0$Acres_percent_difference, 
+#   y=joins_zone0$Overlap_percent)
+# 
+# ggplot2::qplot(joins_zone0$join_score)
+
+# joins_perfect_zone <- joins_zone0 %>%
+#   dplyr::filter(Acres_percent_difference < 0.2)
+
+```
+I create a Join Rank score by multiplying the percent difference in the calculated acreages of the two zones times the inverse of the percent of overlap. So, two zones that have exactly the same acreage and overlap perfectly would have a join rank score of 1. Export these features to QGIS. Inspect them, starting at the lowest join rank scores. Once they start looking good, can stop inspecting. The zones A geometries will take precedent.
+
+```{r eval=F}
+joined.a0 <- zones.a %>%
+  dplyr::inner_join(
+    joins_zone0 %>%
+      dplyr::select(id.a=ZoneID, join_score) %>%
+      sf::st_drop_geometry(),
+    by='id.a')
+
+```
+
+Review the joined.a polygons. Edit geometry as needed.
+```{r eval=F}
+# sf::st_write(joined.a0, 'joined_a0.shp')
+```
+I went through and verified each one. The Join_rank score didn't seem to work so well. Hard to tell for sure. Whenever I saw a new center pivot, I added it to unjoined.a.shp.
+
+
+
+If the perfect zonal join corresponds with a perfect point join, then that is a perfect join.
+```{r}
+
+
+## So there's like 3,200 zones that intersect imperfectly...
+```
+
+### One to Many, Many to One, and Many to Many Intersections
+```{r}
+multi_joins_zone0 <- zones.c0 %>%
+  dplyr::filter(
+    scutils::duplicated2(id.a) |
+      scutils::duplicated2(id.b))
+
+multi_joins_zone1.a <- multi_joins_zone0 %>%
+  sf::st_drop_geometry() %>%
+  dplyr::semi_join(zones.a, ., 'id.a')
+
+multi_joins_zone1.b <- multi_joins_zone0 %>%
+  sf::st_drop_geometry() %>%
+  dplyr::semi_join(zones.b1, ., 'id.b')
+```
+
+
+```{r}
+### This is what I'd like to do:
+## get the zones.a and zones.b that are in this set.
+## spatial dissolve the pivots into larger polygons.
+## then, in qgis, iterate through the merged larger polygons,
+## while editing the zones.a polygons. (joined.a1)
+
+## then bring the zones.a polygons back in to R.
+
+
+### None of these things work:
+# multi_joins_zones1 <- sf::st_combine(multi_joins_zone1.a, multi_joins_zone1.b)
+# multi_joins_zones2 <- sf::st_union(multi_joins_zone1.a, multi_joins_zone1.b, by_feature=T)
+# multi_joins_zones2 <- sf::st_union(multi_joins_zones1, )
+
+multi_joins_zone2 <- dplyr::bind_rows(
+   dplyr::select(multi_joins_zone1.a, geometry),
+   dplyr::select(multi_joins_zone1.b, geometry))
+
+### This doesn't work either:
+# multi_joins_zones3 <- sf::st_union(multi_joins_zone2, by_feature=T)
+
+### (by "doesn't work" I mean it doesn't union like I would expect)
+### apparently sf doesn't have native implementation of union as i would expect.
+### igraphs and terra packages can be used to merge clusters.
+### but it is kinda complicated and unnecessary.
+```
+
+
+```{r eval=F}
+# sf::st_write(multi_joins_zone2, 'multi_joins_zone2.shp')
+
+### just union them in qgis.
+## I used the qgis dissolve tool, 
+## which turned them all into a single multi-part polygon feature.
+## then I used qgis multipart to singlepart tool.
+## that reduces the number of features from 2,422 to 461
+## So I can iterate through them and inspect 
+## without looking at each set of overlapping polygons 
+## multiple times.
+
+# sf::st_write(multi_joins_zone1.a, 'multi_joins_zone_1a.shp')
+```
+
+
+```{r}
+## combine the unjoined_a1.shp, unjoined_b.shp, joined_a0.shp, and multi_joins_a1.shp
+
+unjoined.a.shp <- sf::st_read('unjoined_a1.shp')
+
+unjoined.b.shp <- sf::st_read('unjoined_b1.shp')
+
+joined.a0.shp <- sf::st_read('joined_a0.shp')
+
+multi_joins.a1.shp <- sf::st_read('multi_joins_zone_1a.shp')
+## merge them wisely to conserve the year values.
+
+### unjoined.a.shp includes some pivots that were first spotted during this review (2022 imagery)
+### there might be a few deletions here also. (year_2022 == FALSE)
+
+### multi_joins.a1.shp has a few that were first spotted now, but mostly spotted in 2021 imagery.
+### not sure there is any way to tell the difference, so figure all the new ones were all spotted in 2021.
+### also a few deletions.
+
+### joined.a0.shp includes deletions.
+
+## unjoined.b.shp might include deletions.
+
+
+## inspect intersections.
+
+## make valid
+
+
+
+```
+
+```{r}
+nrow(zones.a) ## 2,689
+nrow(zones.b) ## 2,980
+
+nrow(zones.a.test) ## 73
+nrow(zones.b.test) ## 972
+
+nrow(zones.c0) ## 3,445
+
+length(unique(zones.c0$id.a)) ## 2,413 (out of 2,689)
+length(unique(zones.c0$id.b)) ## 2,487 (out of 2,980)
+
+zones.c0 %>% sf::st_drop_geometry() %>%
+  dplyr::select(id.a, id.b) %>%
+  unique() %>% nrow() ## 3,445
+
+zones.c1 <- zones.c0 %>%
+  dplyr::left_join(
+    sf::st_drop_geometry(pts.a1) %>%
+      dplyr::select(id.a, ZoneID),
+    by=c('id.a'='ZoneID')) # %>%
+  
+
+```
+
+
+
+
+
+
+
+Conjoined type 1: overlaps another zone from the same dataset, and neither have any other intersections.
+
+Conjoined type 2: 
+
+
+
+
+Check the percent overlap of the two zones.
+
+Take the spatial minimum of the two zones? (for features where the points were able to be joined)
+
+, and joins with low percent overlap.
+
+```{r eval=F}
+sf::st_write(irrigation_zones2020, 'irrigation_zones2020.shp')
+
+sf::st_write(pivot_circles2022, 'pivot_circles2022.shp')
+
+```
+
+then, in GIS, select/edit the most accurate features from each group(?)
+
+look for new features in 2022 that weren't in the 2020 data.
+
+Modify the 2022 data so that the incomplete semi-circle pivots are drawn accurately
