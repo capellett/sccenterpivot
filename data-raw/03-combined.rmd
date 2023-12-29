@@ -88,6 +88,7 @@ joinsb.1 <- joinsb.0 %>%
 
 joinsb.2 <- joinsb.1 %>%
   dplyr::filter(distance.a < length_ft)
+## this removes like 30 joins.
 
 joins_perfect_pt <- joinsb.2 %>%
   dplyr::inner_join(joinsa.1, by=c('id.b'='nearest.b', 'nearest.a'='id.a')) %>%
@@ -102,6 +103,12 @@ joins_perfect_pt <- joinsb.2 %>%
 ```
 
 If two points are nearest to each other, and the distance between them is less than the length_ft, and the pt.b is within the irrigation zone, then you can probably figure they are the same point.
+
+```{r}
+
+usethis::use_data(joins_perfect_pt, overwrite=T)
+
+```
 
 ## Combine the Zones
 ```{r}
@@ -309,6 +316,15 @@ joins_zone0 <- zones.c0 %>%
 ## note: Acres_overlap compares the full circle of the 2022 buffered points.
 ```
 I create a Join Rank score by multiplying the percent difference in the calculated acreages of the two zones times the inverse of the percent of overlap. So, two zones that have exactly the same acreage and overlap perfectly would have a join rank score of 1. Export these features to QGIS. Inspect them, starting at the lowest join rank scores. Once they start looking good, can stop inspecting. The zones A geometries will take precedent.
+
+```{r}
+
+usethis::use_data(joins_zone0)
+### I want to calculate a summary error statistic for Pellett 2023a JSCWRC publication.
+```
+
+
+
 
 ```{r}
 # ggplot2::qplot(
