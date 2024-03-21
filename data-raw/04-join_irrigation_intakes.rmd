@@ -1,0 +1,160 @@
+---
+title: "Join Irrigation Intakes"
+author: "C A Pellett"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Join the irrigation intakes to the irrigated areas.
+
+Consider the proximity of the intake to the irrigated area. It would be preferable to use the  pivot points instead of the irrigation polygons for this spatial join, but the two version of pivot points (Pellett 2020; Sekaran and Payero 2022) have not been conflated to a single set of points joined to the polygons.
+
+Consider the annual irrigation volume compared with the assumed irrigated area.
+
+```{r}
+## Import scwu intakes and withdrawal volumes.
+
+ag_intakes <- scwaterdemand::intakes %>%
+  scwaterwithdrawal::parse_sourceid() %>%
+  #scwateruse::st_drop_geometry_if(.) %>%
+  dplyr::filter(SourceTypeCode %in% c("S", "G") &
+                  CategoryCode %in% c("IR"))
+
+ag_withdrawals <- scwaterwithdrawal::wu$WU_monit %>%
+  dplyr::filter(year > 2009) %>%
+  dplyr::semi_join(ag_intakes, 'sourceid') %>%
+  dplyr::mutate(
+    cufty = total*133680.556,
+    acres = (cufty / (10/12))/43560) ## assume 10 inches/yr
+```
+
+
+```{r}
+zones <- sccenterpivot::zones
+```
+
+It would be preferable to consider the years of reported irrigation and the years of apparent irrigated area, but at this point I will limit the analysis to year 2021.
+
+```{r}
+ag_withdrawal_acres <- ag_withdrawals %>%
+  dplyr::filter(year==2021) %>%
+  dplyr::select(sourceid, acres)
+
+pts <- ag_intakes %>%
+  dplyr::inner_join(ag_withdrawal_acres, 'sourceid')
+
+polygons <- zones %>%
+  dplyr::filter(year2021>0) %>%
+  dplyr::select(id_a, Type, Acres) %>%
+  sf::st_transform(sf::st_crs(pts)) %>%
+  sf::st_make_valid()
+# class(pts) ## sf, data.frame
+```
+
+Start by joining each polygon to the nearest point feature, and calculate the distance.
+Plot the distribution of join distances, and select a reasonable maximum distance.
+Remove joins above the maximum distance threshold.
+
+```{r}
+# sf::st_crs(pts)
+# sf::st_crs(polygons)
+
+nearest_pt <- sf::st_nearest_feature(polygons, pts)
+
+join1 <- polygons %>%
+  dplyr::mutate(
+    sourceid = pts[nearest_pt,]$sourceid,
+    Acres_pt = pts[nearest_pt,]$acres,
+    distance_ft = 
+      units::drop_units(
+        sf::st_distance(polygons, pts[nearest_pt,], by_element=T)*3.28084))
+
+# nearest_distance <- sf::st_distance(polygons, pts)
+```
+
+
+```{r}
+join1 %>%
+  ggplot2::ggplot(
+    ggplot2::aes(x=distance_ft)) +
+  ggplot2::geom_histogram() +
+  ggplot2::scale_x_log10(
+    limits=c(10, NA),
+    labels=scales::comma_format())
+
+```
+I'll say the maximum distance threshold is 0.5 mile (2,640 ft)
+
+```{r}
+join2 <- join1 %>%
+  sf::st_drop_geometry() %>%
+  dplyr::filter(distance_ft < 2640)
+```
+
+
+```{r}
+join2 %>%
+  dplyr::group_by(sourceid, Acres_pt) %>%
+  dplyr::summarise(Acres_polygons = sum(Acres)) %>%
+  ggplot2::ggplot(
+    ggplot2::aes(x=Acres_pt, y=Acres_polygons)) +
+  ggplot2::geom_point(alpha=0.3) +
+  ggplot2::coord_fixed() +
+  ggplot2::scale_x_log10(
+    labels=scales::comma_format()) +
+  ggplot2::scale_y_log10(
+    labels=scales::comma_format()) +
+  ggplot2::geom_abline(slope=1) 
+```
+
+For each point, compare the total polygon acreage with the point acreage. Select a maximum acreage threshold (say, twice the 10inch estimate).
+
+For points with much more polygon acreage than point acreage, remove the furthest polygons.
+
+```{r}
+## select pts with much more polygon acreage than point (volume) acreage
+## for each of these points, rank the polygons by distance
+## and calculate the cumulative acreage at each rank.
+join_excess <- join2 %>%
+  dplyr::group_by(sourceid) %>%
+  dplyr::mutate(Acres_polygons = sum(Acres, na.rm=T)) %>%
+  dplyr::filter(Acres_polygons > Acres_pt*2) %>%
+  dplyr::mutate(rank = rank(distance_ft)) %>%
+  dplyr::arrange(sourceid, rank)
+  
+## if removal of the lowest ranking polygon brings the acreage closer to the median, 
+## but not less than 0.5 of the median, then remove that polygon.
+## repeat until there are no more such low-ranking polygons.
+
+
+
+## evaluate all polygons to see if they are very close to other points
+## such polygons should be less certainly joined to their closest point.
+
+
+
+
+```
+
+For point with much less polygon acreage than point acreage, check if unjoined polygons of suitable areage are within the maximum distance threshold.
+
+
+I will leave some intakes and irrigated areas unjoined, rather than make too many spurious assumptions.
+
+
+
+
+
+
+
+# Projected well locations.
+
+```{r}
+
+```
+
+
