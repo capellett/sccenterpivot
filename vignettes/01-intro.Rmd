@@ -1,0 +1,27 @@
+---
+title: "Introduction"
+author: "C A Pellett"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Introduction}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+Agricultural water use in South Carolina has been a subject of some public debate over the past decade. Center pivot irrigation has expanded over this time. Some stakeholders have expressed concern that unconstrained expansion of irrigation may pose a threat to the state’s water resources. Other stakeholders have argued that growing constraints on agriculture will quickly put an end to the recent phase of expansion in agricultural water use. The present dissertation is motivated by a widely-held point of agreement among the various stakeholders: that more investigation is warranted.
+
+Multiple data sources have suggested rapid expansion of agricultural water use in South Carolina over the past couple of decades (USDA NASS Census of Agriculture, USDA NASS Irrigation and Water Management Survey, SC DES Water Use Database). However, a singular series of surveys undertaken by Clemson Extension from the mid-1990's to 2000 indicate that agricultural irrigation was significantly greater at that time than those other data sources had indicated. Clemson Extension agents at that time had the resources and relationships to collect very thorough survey results, while the same irrigators were apparently less compliant with SC water withdrawal data collection and less likely to respond to the USDA NASS censuses and surveys. Some of the apparent expansion of agricultural water use in the latter datasets was likely caused by increased compliance over time. 
+
+The project of mapping irrigated areas in South Carolina was undertaken to provide an independent source of data, unbiased by self-reporting, to support long-term water planning in the state. The results are biased toward center pivot sprinklers, because those irrigation distribution systems are most plainly evident in the imagery that has been publicly available (USDA NAIP). 
+
+The general methods are documented in the Journal of South Carolina Water Resources (Pellett 2020, Sekaran and Payero 2023) and in Chapters 2 and 3 and Appendix I of the Clemson University doctoral dissertation "Agricultural Water Use in South Carolina" (Pellett 2024). The subsequent articles in this package include detailed methods and associated R-code.
+
+

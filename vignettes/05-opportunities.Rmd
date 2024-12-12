@@ -1,0 +1,21 @@
+---
+title: "Opportunities for expansion"
+author: "C A Pellett"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Opportunities for expansion}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+The irrigation opportunities were derived from another research project, described in Pellett 2024 Appendix I. Here they are simply added to this R-package.
+
+```{r eval=F}
+opportunities <- readRDS("../data-raw/opportunities/opportunities_rank.rds")
+```
+
+
+```{r eval=F}
+usethis::use_data(opportunities)
+```

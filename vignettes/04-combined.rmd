@@ -1,12 +1,17 @@
 ---
-title: "03_combined.Rmd"
+title: "Combine the previous editions"
 author: "C A Pellett"
 date: "`r Sys.Date()`"
-output: html_document
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Combine the previous editions}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE,
+                      eval=FALSE)
 
 library(tidyverse)
 library(units)
@@ -22,8 +27,8 @@ Spatial joins are used to combine the two editions of data. The result is a new 
 
 
 ```{r}
-load("~/Rpackages/sccenterpivot/data/pivot_pts2020.rda")
-load("~/Rpackages/sccenterpivot/data/pivot_pts2022.rda")
+load("../data/pivot_pts2020.rda")
+load("../data/pivot_pts2022.rda")
 
 pts.a0 <- pivot_pts2020 %>%
   dplyr::rename(id.a = PointID) %>%
@@ -104,7 +109,7 @@ joins_perfect_pt <- joinsb.2 %>%
 
 If two points are nearest to each other, and the distance between them is less than the length_ft, and the pt.b is within the irrigation zone, then you can probably figure they are the same point.
 
-```{r}
+```{r eval=F}
 
 usethis::use_data(joins_perfect_pt, overwrite=T)
 
@@ -112,8 +117,8 @@ usethis::use_data(joins_perfect_pt, overwrite=T)
 
 ## Combine the Zones
 ```{r}
-load("~/Rpackages/sccenterpivot/data/irrigation_zones2020.rda")
-load("~/Rpackages/sccenterpivot/data/pivot_circles2022.rda")
+load("../data/irrigation_zones2020.rda")
+load("../data/pivot_circles2022.rda")
 ```
 
 ```{r}
@@ -202,7 +207,7 @@ Some zones overlap other zones in the same dataset. This could confound subseque
 ```
 
 ```{r}
-zones.c0 <- readRDS('zones_c0.rds')
+zones.c0 <- readRDS('../data-raw/zones_c0.rds')
 
 ```
 
@@ -317,7 +322,7 @@ joins_zone0 <- zones.c0 %>%
 ```
 I create a Join Rank score by multiplying the percent difference in the calculated acreages of the two zones times the inverse of the percent of overlap. So, two zones that have exactly the same acreage and overlap perfectly would have a join rank score of 1. Export these features to QGIS. Inspect them, starting at the lowest join rank scores. Once they start looking good, can stop inspecting. The zones A geometries will take precedent.
 
-```{r}
+```{r eval=F}
 
 usethis::use_data(joins_zone0)
 ### I want to calculate a summary error statistic for Pellett 2023a JSCWRC publication.
@@ -432,7 +437,7 @@ multi_joins_zone2 <- dplyr::bind_rows(
 ### Go ahead and assign id.a values.
 
 ## unjoined.b.shp might include deletions.
-unjoined.b1.shp <- sf::st_read('unjoined_b1.shp')
+unjoined.b1.shp <- sf::st_read('../data-raw/unjoined_b1.shp')
 
 # unjoined.b1.deletions <-   unjoined.b1 %>%
 #     dplyr::filter(!(id.b %in% unjoined.b1.shp$id_b)) %>%
@@ -456,7 +461,7 @@ unjoined.b2 <- unjoined.b1.shp %>%
 ```{r}
 ### unjoined.a.shp includes some pivots that were first spotted during this review (2022 imagery)
 ### there might be a few deletions here also. (year_2022 == FALSE)
-unjoined.a1.shp <- sf::st_read('unjoined_a1.shp') %>%
+unjoined.a1.shp <- sf::st_read('../data-raw/unjoined_a1.shp') %>%
     dplyr::mutate(
       year2019 = id_a %in% unjoined.a1$id.a, 
       year2021 = TRUE) %>%
@@ -481,9 +486,9 @@ unjoined.a2 <- dplyr::bind_rows(
   dplyr::mutate(
     dplyr::across(year2009:year2018, as.logical))
 
-unjoined.a2 %>%
-  dplyr::filter(scutils::duplicated2(id.a)) %>%
-  View() ## zero entries
+# unjoined.a2 %>%
+#   dplyr::filter(scutils::duplicated2(id.a)) %>%
+#   View() ## zero entries
 ```
 
 
@@ -492,7 +497,7 @@ unjoined.a2 %>%
 
 ```{r}
 ### joined.a0.shp includes deletions.
-joined.a0.shp <- sf::st_read('joined_a0.shp') %>%
+joined.a0.shp <- sf::st_read('../data-raw/joined_a0.shp') %>%
   dplyr::mutate(year2019=T, year2021=T) %>%
   dplyr::rename(id.a=id_a)
 
@@ -510,7 +515,7 @@ joined.a1 <- dplyr::bind_rows(
 ### multi_joins.a1.shp has a few that were first spotted now, but mostly spotted in 2021 study.
 ### not sure there is any way to tell the difference, so figure all the new ones were all spotted in 2021.
 ### also a few deletions.
-multi_joins.a1.shp <- sf::st_read('multi_joins_zone_1a.shp') %>%
+multi_joins.a1.shp <- sf::st_read('../data-raw/multi_joins_zone_1a.shp') %>%
   dplyr::rename(id.a=id_a) %>%
   dplyr::mutate(year2019=T, year2021=T)
 
@@ -582,7 +587,7 @@ zones3.intersections <- sf::st_intersection(zones3) %>%
 
 ```{r}
 ## read in the edited shapefile.
-zones3.shp <- sf::st_read('zones3.shp') 
+zones3.shp <- sf::st_read('../data-raw/zones3.shp') 
 
 ## calculate polygon areas (acres)
 zones4 <- zones3.shp %>%
@@ -678,7 +683,7 @@ zones7 <- zones6 %>%
 ```
 
 
-```{r}
+```{r eval=F}
 zones <- zones7
 
 usethis::use_data(zones, overwrite=T)

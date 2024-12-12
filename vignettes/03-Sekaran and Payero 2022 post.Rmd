@@ -1,8 +1,12 @@
 ---
-title: "Payero and Sekaran review"
+title: "Payero and Sekaran Review"
 author: "C A Pellett"
 date: "`r Sys.Date()`"
-output: html_document
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Payero and Sekaran Review}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
 ```{r setup, include=FALSE}
@@ -11,7 +15,7 @@ library(tidyverse)
 ```
 
 ```{r}
-pivots0 <- readr::read_csv("SC_Pivots_2021_Lat_Lon2.csv")
+pivots0 <- readr::read_csv("../data-raw/SC_Pivots_2021_Lat_Lon2.csv")
 
 ```
 
@@ -79,7 +83,7 @@ unique(pivots0$MapYear)
 The only value in this column is 2022. Yet, the file name indicates 2021.
 
 
-```{r}
+```{r eval=F}
 pivot_pts2022 <- pivots0 %>%
   dplyr::select(-id, -MapYear) %>%
   dplyr::mutate(
@@ -90,7 +94,7 @@ pivot_pts2022 <- pivots0 %>%
 
 ```
 
-```{r}
+```{r eval=F}
 ## Calculate Area (acres)
 ## st_area returns m2 for this CRS.
 
@@ -107,7 +111,7 @@ pivot_wetted2022 <- pivot_pts2022 %>%
 ```
 
 
-```{r}
+```{r eval=F}
 usethis::use_data(pivot_pts2022, overwrite=T)
 
 usethis::use_data(pivot_circles2022, overwrite=T)
