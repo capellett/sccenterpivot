@@ -24,4 +24,12 @@ The project of mapping irrigated areas in South Carolina was undertaken to provi
 
 The general methods are documented in the Journal of South Carolina Water Resources (Pellett 2020, Sekaran and Payero 2023) and in Chapters 2 and 3 and Appendix I of the Clemson University doctoral dissertation "Agricultural Water Use in South Carolina" (Pellett 2024). The subsequent articles in this package include detailed methods and associated R-code.
 
+```{r}
+## leaflet map
 
+```
+
+```{r}
+## download button
+
+```

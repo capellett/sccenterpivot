@@ -36,7 +36,7 @@ There were some cases where the pivot points and arrangement of irrigation infra
 
 ```{r zones, eval=F}
 i_zones0 <- sf::st_read(
-  "DNR-irrigationZones//irrigation_zones.shp") %>%
+  "../data-raw/DNR-irrigationZones//irrigation_zones.shp") %>%
   dplyr::mutate(ZoneID=1:dplyr::n()) %>%
   dplyr::select(ZoneID, Type=notes, County=COUNTYNM, Acres,
          year2009, year2011, year2013, year2015, year2017)
@@ -109,7 +109,7 @@ i_zones4$Acres <- i_acres
 The pivot_points shapefile contains point features associated with the central pivot point of irrigation zones of the center pivot type. 
 
 ```{r eval=F}
-pivot_pts0 <- sf::st_read("DNR-irrigationZones//pivot_points.shp") # %>%
+pivot_pts0 <- sf::st_read("../data-raw/DNR-irrigationZones//pivot_points.shp") # %>%
   # dplyr::mutate(PointID = 1:dplyr::n()) %>% ## This already got calculated.
   # dplyr::select(-Type)
 
@@ -200,7 +200,7 @@ The irrigation_pipes shapefile contains line features created in ArcMap to join 
 ## Something is wrong with the joins. They don't have columns. Neither do the pivot points.
 ## Actually, that might have been how I digitized them in the first place.
 i_joins0 <- sf::st_read(
-  "DNR-irrigationZones//irrigation_pipes.shp",
+  "data-raw/DNR-irrigationZones//irrigation_pipes.shp",
   stringsAsFactors=FALSE) %>%
   dplyr::rename(PermitID=PermtID)
 
