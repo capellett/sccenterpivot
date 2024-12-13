@@ -36,7 +36,11 @@ Multiple data sources have suggested rapid expansion of agricultural water use i
 
 The project of mapping irrigated areas in South Carolina was undertaken to provide an independent source of data, unbiased by self-reporting, to support long-term water planning in the state. The results are biased toward center pivot sprinklers, because those irrigation distribution systems are most plainly evident in the imagery that has been publicly available (USDA NAIP). 
 
-The general methods are documented in the Journal of South Carolina Water Resources (Pellett 2020, Sekaran and Payero 2023) and in Chapters 2 and 3 and Appendix I of the Clemson University doctoral dissertation "Agricultural Water Use in South Carolina" (Pellett 2024). The subsequent articles in this package include detailed methods and associated R-code.
+The general methods are documented in the Journal of South Carolina Water Resources (Pellett 2020, Sekaran and Payero 2023) and in Chapters 2 and 3 and Appendix I of the Clemson University doctoral dissertation "Agricultural Water Use in South Carolina" (Pellett 2024). 
+
+The irrigation zones are pretty solid data. Maybe the polygon outlines aren't exact to the nearest meter, and certainly there are some kinds of irrigation that are under-represented (drip, flood, orchards, where irrigation is not so evident in the imagery data). But if there is a zone delineated, then irrigation infrastructure (center pivot sprinkler trusses) was observed. So there may be false negatives, but few or no false positives.
+
+The opportunities for center pivot expansion are _not_ solid data, they are a rough guess. There is no claim that these areas are actually suitable for irrigation or that they will soon be irrigated. The opportunities/constraints analysis that produced this dataset did not include water availability, as South Carolina's water availability assessments follow these outputs, subsequently. The constraints on irrigation were intentionally exaggerated. The purpose of this exercise was to determine if there would be enough irrigable acreage to sustain an expansion of irrigated land by 44% over the next 50 years. These "opportunities" indicate that spatial constraints apparently do not limit such expansion.
 
 ## Interactive Map
 ```{r}
