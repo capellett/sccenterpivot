@@ -13,7 +13,7 @@ vignette: >
 ---
 
 _(Scroll down for the interactive map and download links)_
-```{r echo=F results=hide}
+```{r echo=F include=FALSE}
 load("../data/opportunities.rda")
 load("../data/zones.rda")
 library(sf)
