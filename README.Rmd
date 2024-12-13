@@ -28,7 +28,23 @@ This package was developed by Dr. Charles Alex Pellett, while studying at Clemso
 
 ### How to access the data without using R
 
-Check out the Introduction article on GitHub pages; you'll find an interactive map and download buttons for the data. 
+## Data Download
+
+Use the buttons below to download the datasets as compressed shapefiles.
+```{r}
+# getwd()
+downloadthis::download_file(
+  path = '../data-raw/exports/zones.zip',
+  output_name = 'South Carolina Irrigation Zones',
+  button_label = 'Download irrigation zone data')
+
+downloadthis::download_file(
+  path = '../data-raw/exports/opportunities.zip',
+  output_name = 'South Carolina Center Pivot Opportunities',
+  button_label = 'Download center pivot opportunity data')
+```
+
+For more information, check out the Introduction article on GitHub pages: 
 https://capellett.github.io/sccenterpivot/articles/01-intro.html 
 
 ### Use in R
