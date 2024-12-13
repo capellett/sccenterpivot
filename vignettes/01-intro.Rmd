@@ -116,3 +116,13 @@ downloadthis::download_file(
 ```
 
 This might not work in Internet Explorer, try a different browser.
+
+## References
+
+Pellett, C. Alex (2020) "Mapping Center Pivot Irrigation Fields in South Carolina with Google Earth Engine and the National Agricultural Imagery Program," Journal of South Carolina Water Resources: Vol. 7 : Iss. 1 , Article 4. DOI: https://doi.org/10.34068/JSCWR.07.02 Available at: https://tigerprints.clemson.edu/jscwr/vol7/iss1/4
+
+Pellett, CA 2024. "Agricultural Water Use in South Carolina: A Series of Investigations to Support Long-Term Planning." Clemson University Dissertation, December 2024.
+
+Sekaran U, Payero JO. 2023. Mapping and Characterization of Center Pivot and Lateral Move Irrigation Systems in South Carolina Using Quantum Geographic Information System. Journal of South Carolina Water Resources: 9(1), Article 5. Available at: https://tigerprints.clemson.edu/jscwr/vol9/iss1/5 
+
+Zurqani, H. A., Allen, J. S., Post, C. J., Pellett, C. A., & Walker, T. C. (2021). Mapping and quantifying agricultural irrigation in heterogeneous landscapes using Google Earth Engine. Remote Sensing Applications: Society and Environment, 23, 100590.
