@@ -12,10 +12,14 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r echo=F, eval=F}
+```{r echo=F}
 load("../data/opportunities.rda")
 load("../data/zones.rda")
+library(sf)
+```
 
+
+```{r echo=F, eval=F}
 sf::st_write(opportunities, '../data-raw/exports/opportunities.shp')
 sf::st_write(zones, '../data-raw/exports/zones.shp')
 ## zip these shapefiles into folders.
@@ -25,6 +29,7 @@ sf::st_write(zones, '../data-raw/exports/zones.shp')
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
+  echo=F,
   collapse = TRUE,
   comment = "#>"
 )
@@ -43,9 +48,52 @@ The irrigation zones are pretty solid data. Maybe the polygon outlines aren't ex
 The opportunities for center pivot expansion are _not_ solid data, they are a rough guess. There is no claim that these areas are actually suitable for irrigation or that they will soon be irrigated. The opportunities/constraints analysis that produced this dataset did not include water availability, as South Carolina's water availability assessments follow these outputs, subsequently. The constraints on irrigation were intentionally exaggerated. The purpose of this exercise was to determine if there would be enough irrigable acreage to sustain an expansion of irrigated land by 44% over the next 50 years. These "opportunities" indicate that spatial constraints apparently do not limit such expansion.
 
 ## Interactive Map
-```{r}
+```{r echo=F}
+zones_all <- zones |>
+  dplyr::mutate(Type = dplyr::if_else(year2021 != 1, 'Inactive', Type)) |>
+  dplyr::bind_rows(
+    opportunities |>
+      dplyr::mutate(Type = dplyr::if_else(projection1, 'Projected Expansion', 'Other Opportunity'),
+                    id_a = as.integer(rank1 + 10000)) |>
+      dplyr::select(id_a, Type, Acres=acres))
+```
 
+```{r echo=F}
+unique(zones_all$Type)
 
+zone_palette <- leaflet::colorFactor(
+  palette = c('green', 'green', 'green', 'gray', 'purple', 'orange'),
+  levels = c('Center Pivot', 'sprinklers', 'not center pivot', 
+             'Inactive', 'Projected Expansion', 'Other Opportunity'))
+
+## This should probably go in the scsf package.
+GetURL <- function(service, host = "basemap.nationalmap.gov") {
+  sprintf("https://%s/arcgis/services/%s/MapServer/WmsServer", host, service)
+}
+```
+
+```{r message=FALSE, echo=F, results=FALSE}
+leaflet::leaflet(zones_all) |>
+  leaflet::addPolygons(
+    # data = zones_all,
+    group = ~Type,
+    label = ~paste0(id_a, ' ', Type),
+    color = ~zone_palette(Type)) |>
+  
+  leaflet::addTiles(group='OpenStreetMap') |>
+
+  leaflet::addProviderTiles(provider='Esri.WorldImagery', group='ESRI Imagery') |>
+
+  leaflet::addWMSTiles(
+    GetURL("USGSImageryOnly"), group = 'USGS Imagery',
+    attribution = paste0("<a href='https://www.usgs.gov/'>",
+              "U.S. Geological Survey</a> | ",
+              "<a href='https://www.usgs.gov/laws/policies_notices.html'>",
+              "Policies</a>"), layers = "0") |>
+
+  leaflet::addLayersControl(
+    baseGroups = c('OpenStreetMap', 'USGS Imagery'), overlayGroups = ~Type) |>
+   leaflet::layersControlOptions(collapsed=F)
 ```
 
 ## Data Download
