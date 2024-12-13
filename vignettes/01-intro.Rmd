@@ -12,7 +12,8 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r echo=F}
+_(Scroll down for the interactive map and download links)_
+```{r echo=F results=hide}
 load("../data/opportunities.rda")
 load("../data/zones.rda")
 library(sf)
@@ -35,7 +36,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-Agricultural water use in South Carolina has been a subject of some public debate over the past decade. Center pivot irrigation has expanded over this time. Some stakeholders have expressed concern that unconstrained expansion of irrigation may pose a threat to the state’s water resources. Other stakeholders have argued that growing constraints on agriculture will quickly put an end to the recent phase of expansion in agricultural water use. The present dissertation is motivated by a widely-held point of agreement among the various stakeholders: that more investigation is warranted.
+Agricultural water use in South Carolina has been a subject of some public debate over the past decade. Center pivot irrigation has expanded over this time. Some stakeholders have expressed concern that unconstrained expansion of irrigation may pose a threat to the state’s water resources. Other stakeholders have argued that growing constraints on agriculture will quickly put an end to the recent phase of expansion in agricultural water use. This work is motivated by a widely-held point of agreement among the various stakeholders: that more investigation is warranted.
 
 Multiple data sources have suggested rapid expansion of agricultural water use in South Carolina over the past couple of decades (USDA NASS Census of Agriculture, USDA NASS Irrigation and Water Management Survey, SC DES Water Use Database). However, a singular series of surveys undertaken by Clemson Extension from the mid-1990's to 2000 indicate that agricultural irrigation was significantly greater at that time than those other data sources had indicated. Clemson Extension agents at that time had the resources and relationships to collect very thorough survey results, while the same irrigators were apparently less compliant with SC water withdrawal data collection and less likely to respond to the USDA NASS censuses and surveys. Some of the apparent expansion of agricultural water use in the latter datasets was likely caused by increased compliance over time. 
 
@@ -43,9 +44,9 @@ The project of mapping irrigated areas in South Carolina was undertaken to provi
 
 The general methods are documented in the Journal of South Carolina Water Resources (Pellett 2020, Sekaran and Payero 2023) and in Chapters 2 and 3 and Appendix I of the Clemson University doctoral dissertation "Agricultural Water Use in South Carolina" (Pellett 2024). 
 
-The irrigation zones are pretty solid data. Maybe the polygon outlines aren't exact to the nearest meter, and certainly there are some kinds of irrigation that are under-represented (drip, flood, orchards, where irrigation is not so evident in the imagery data). But if there is a zone delineated, then irrigation infrastructure (center pivot sprinkler trusses) was observed. So there may be false negatives, but few or no false positives.
+The irrigation zones are solid data. Maybe the polygon outlines aren't exact to the nearest meter, and certainly there are some kinds of irrigation that are under-represented (drip, flood, orchards, where irrigation is not so evident in the imagery data). But if there is a zone delineated, then irrigation infrastructure (center pivot sprinkler trusses) was observed. So there may be false negatives, but few or no false positives. This dataset was initially collected for use as training data for machine learning models (Zurqani et al 2021); data collection was simple and easy enough that the dataset is quite complete and potentially useful in its own right.
 
-The opportunities for center pivot expansion are _not_ solid data, they are a rough guess. There is no claim that these areas are actually suitable for irrigation or that they will soon be irrigated. The opportunities/constraints analysis that produced this dataset did not include water availability, as South Carolina's water availability assessments follow these outputs, subsequently. The constraints on irrigation were intentionally exaggerated. The purpose of this exercise was to determine if there would be enough irrigable acreage to sustain an expansion of irrigated land by 44% over the next 50 years. These "opportunities" indicate that spatial constraints apparently do not limit such expansion.
+The opportunities for center pivot expansion are _not_ solid data, they are speculative and certainly wrong. There is no claim that these areas are actually suitable for irrigation or that they will soon be irrigated. The opportunities/constraints analysis that produced this dataset did not include water availability, as South Carolina's water availability assessments follow these outputs, subsequently. The constraints on irrigation were intentionally exaggerated, including aggregate total developed areas from multiple scenarios of future development. Nevertheless, there is no claim that all "opportunities" for expansion of center pivot sprinklers will ever be irrigated. The purpose of this exercise was to determine if there would be enough irrigable acreage to sustain an expansion of irrigated land by 44% over the next 50 years. These "opportunities" indicate that spatial constraints apparently do not limit such expansion. The opportunities were ranked according to their proximity to existing irrigation and the amount of cultivated area that they overlay. The highest ranking opportunities were selected for projection scenarios as potential locations of future groundwater withdrawal wells for irrigation. This is a rough analysis conducted for state-wide planning efforts; the results are intended to be generally relevant, but actual results at specific locations are expected to vary. 
 
 ## Interactive Map
 ```{r echo=F}
@@ -72,7 +73,7 @@ GetURL <- function(service, host = "basemap.nationalmap.gov") {
 }
 ```
 
-```{r message=FALSE, echo=F, results=FALSE}
+```{r message=FALSE, echo=F}
 leaflet::leaflet(zones_all) |>
   leaflet::addPolygons(
     # data = zones_all,
