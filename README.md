@@ -1,3 +1,5 @@
+C A Pellett
+2024-12-13
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
@@ -33,7 +35,7 @@ of this information.
 
 Check out the Introduction article on GitHub pages; you’ll find an
 interactive map and download buttons for the data.
-<https://capellett.github.io/sccenterpivot/articles/intro.html>
+<https://capellett.github.io/sccenterpivot/articles/01-intro.html>
 
 ### Use in R
 
