@@ -29,11 +29,11 @@ sf::st_write(zones, '../data-raw/exports/zones.shp')
 
 
 ```{r, include = FALSE}
-knitr::opts_chunk$set(
-  echo=F,
-  collapse = TRUE,
-  comment = "#>"
-)
+# knitr::opts_chunk$set(
+#   echo=F,
+#   collapse = TRUE,
+#   comment = "#>"
+# )
 ```
 
 Agricultural water use in South Carolina has been a subject of some public debate over the past decade. Center pivot irrigation has expanded over this time. Some stakeholders have expressed concern that unconstrained expansion of irrigation may pose a threat to the state’s water resources. Other stakeholders have argued that growing constraints on agriculture will quickly put an end to the recent phase of expansion in agricultural water use. This work is motivated by a widely-held point of agreement among the various stakeholders: that more investigation is warranted.
@@ -60,7 +60,7 @@ zones_all <- zones |>
 ```
 
 ```{r echo=F}
-unique(zones_all$Type)
+# unique(zones_all$Type)
 
 zone_palette <- leaflet::colorFactor(
   palette = c('green', 'green', 'green', 'gray', 'purple', 'orange'),
@@ -73,7 +73,7 @@ GetURL <- function(service, host = "basemap.nationalmap.gov") {
 }
 ```
 
-```{r message=FALSE, echo=F}
+```{r}
 leaflet::leaflet(zones_all) |>
   leaflet::addPolygons(
     # data = zones_all,
@@ -94,7 +94,7 @@ leaflet::leaflet(zones_all) |>
 
   leaflet::addLayersControl(
     baseGroups = c('OpenStreetMap', 'USGS Imagery'), overlayGroups = ~Type) |>
-   leaflet::layersControlOptions(collapsed=F)
+  leaflet::layersControlOptions(collapsed=F)
 ```
 
 ## Data Download
