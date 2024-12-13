@@ -102,7 +102,7 @@ GetURL <- function(service, host = "basemap.nationalmap.gov") {
 ```
 
 ```{r echo=F}
-leaflet::leaflet(zones_all) |>
+m <- leaflet::leaflet(zones_all) |>
   leaflet::addPolygons(
     # data = zones_all,
     group = ~Type,
@@ -123,6 +123,8 @@ leaflet::leaflet(zones_all) |>
   leaflet::addLayersControl(
     baseGroups = c('OpenStreetMap', 'USGS Imagery'), overlayGroups = ~Type) # |>
   # leaflet::layersControlOptions(collapsed=F)
+
+(m)
 ```
 
 
