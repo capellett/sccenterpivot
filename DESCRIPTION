@@ -24,6 +24,7 @@ RoxygenNote: 7.3.2
 VignetteBuilder: knitr
 Imports: 
     downloadthis,
+    leaflet,
     sf
 Remotes: 
     capellett
