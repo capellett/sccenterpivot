@@ -1,5 +1,7 @@
 # Workflow derived from https://github.com/r-lib/actions/tree/master/examples
 # Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
+# I can't get this to work. It belongs in the .github/workflows folder, but it errs.
+
 on:
   push:
     paths: ['**.Rmd']
