@@ -3,7 +3,7 @@ pkgdown: 2.1.1
 pkgdown_sha: ~
 articles:
   01-intro: 01-intro.html
-last_built: 2024-12-13T16:26Z
+last_built: 2024-12-13T16:31Z
 urls:
   reference: https://capellett.github.io/sccenterpivot/reference
   article: https://capellett.github.io/sccenterpivot/articles
