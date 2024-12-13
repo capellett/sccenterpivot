@@ -79,22 +79,22 @@ leaflet::leaflet(zones_all) |>
     # data = zones_all,
     group = ~Type,
     label = ~paste0(id_a, ' ', Type),
-    color = ~zone_palette(Type)) |>
+    color = ~zone_palette(Type)) # |>
   
-  leaflet::addTiles(group='OpenStreetMap') |>
-
-  leaflet::addProviderTiles(provider='Esri.WorldImagery', group='ESRI Imagery') |>
-
-  leaflet::addWMSTiles(
-    GetURL("USGSImageryOnly"), group = 'USGS Imagery',
-    attribution = paste0("<a href='https://www.usgs.gov/'>",
-              "U.S. Geological Survey</a> | ",
-              "<a href='https://www.usgs.gov/laws/policies_notices.html'>",
-              "Policies</a>"), layers = "0") |>
-
-  leaflet::addLayersControl(
-    baseGroups = c('OpenStreetMap', 'USGS Imagery'), overlayGroups = ~Type) |>
-  leaflet::layersControlOptions(collapsed=F)
+  # leaflet::addTiles(group='OpenStreetMap') |>
+  # 
+  # leaflet::addProviderTiles(provider='Esri.WorldImagery', group='ESRI Imagery') |>
+  # 
+  # leaflet::addWMSTiles(
+  #   GetURL("USGSImageryOnly"), group = 'USGS Imagery',
+  #   attribution = paste0("<a href='https://www.usgs.gov/'>",
+  #             "U.S. Geological Survey</a> | ",
+  #             "<a href='https://www.usgs.gov/laws/policies_notices.html'>",
+  #             "Policies</a>"), layers = "0") |>
+  # 
+  # leaflet::addLayersControl(
+  #   baseGroups = c('OpenStreetMap', 'USGS Imagery'), overlayGroups = ~Type) |>
+  # leaflet::layersControlOptions(collapsed=F)
 ```
 
 ## Data Download
