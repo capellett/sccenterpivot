@@ -24,7 +24,7 @@ The research by Payero and Sekaran resulted in a table of center pivots with `r 
 Strange that the file name indicates the data is for 2021, but the MapYear column indicates 2022.
 
 # id Column
-```{r}
+```{r eval=F}
 scutils::dupes(pivots0, 'id') # %>% View()
 ## There are many duplicate id's.
 
