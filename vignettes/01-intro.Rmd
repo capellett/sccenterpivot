@@ -3,11 +3,25 @@ title: "Introduction"
 author: "C A Pellett"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
+resource_files:
+  - data-raw/exports/zones.zip
+  - data-raw/exports/opportunities.zip
 vignette: >
   %\VignetteIndexEntry{Introduction}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
+
+```{r echo=F}
+load("../data/opportunities.rda")
+load("../data/zones.rda")
+
+sf::st_write(opportunities, '../data-raw/exports/opportunities.shp')
+sf::st_write(zones, '../data-raw/exports/zones.shp')
+## zip these shapefiles into folders.
+
+```
+
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
@@ -24,12 +38,28 @@ The project of mapping irrigated areas in South Carolina was undertaken to provi
 
 The general methods are documented in the Journal of South Carolina Water Resources (Pellett 2020, Sekaran and Payero 2023) and in Chapters 2 and 3 and Appendix I of the Clemson University doctoral dissertation "Agricultural Water Use in South Carolina" (Pellett 2024). The subsequent articles in this package include detailed methods and associated R-code.
 
+## Interactive Map
 ```{r}
-## leaflet map
+
 
 ```
 
+## Data Download
+
+Use the buttons below to download the datasets as compressed shapefiles.
+
 ```{r}
-## download button
+# getwd()
+downloadthis::download_file(
+  path = '../data-raw/exports/zones.zip',
+  output_name = 'South Carolina Irrigation Zones',
+  button_label = 'Download irrigation zone data')
+
+downloadthis::download_file(
+  path = '../data-raw/exports/opportunities.zip',
+  output_name = 'South Carolina Center Pivot Opportunities',
+  button_label = 'Download center pivot opportunity data')
 
 ```
+
+This might not work in Internet Explorer, try a different browser.

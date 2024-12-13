@@ -24,6 +24,10 @@ knitr::opts_chunk$set(
 
 This package was developed by Dr. Charles Alex Pellett, while studying at Clemson University and working at the South Carolina Department of Natural Resources (SC DNR). This information is intended for research and long-term water planning. None of the above guarantees the accuracy, reliability, or completeness of this information. The SC DNR and Dr. Pellett are NOT liable for any loss or damage arising from the use of this information.
 
+### How to access the data without using R
+Check out the Introduction article on GitHub pages; you'll find an interactive map and a download button for the data. 
+https://capellett.github.io/scpopulation/articles/intro.html 
+
 ### Use in R
 `scpopulation` can be installed as an R-package by entering the following code into an R terminal:
 

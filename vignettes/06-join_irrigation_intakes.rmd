@@ -10,7 +10,9 @@ vignette: >
 ---
 
 ```{r setup}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE,
+                      eval=F)
+
 ```
 
 # Join the irrigation intakes to the irrigated areas.
@@ -22,15 +24,15 @@ Consider the annual irrigation volume compared with the assumed irrigated area.
 ```{r}
 ## Import scwu intakes and withdrawal volumes.
 
-ag_intakes <- scwaterdemand::intakes %>%
-  scwaterwithdrawal::parse_sourceid() %>%
-  #scwateruse::st_drop_geometry_if(.) %>%
+ag_intakes <- scwaterdemand::intakes |>
+  scwaterwithdrawal::parse_sourceid() |>
+  #scwateruse::st_drop_geometry_if(.) |>
   dplyr::filter(SourceTypeCode %in% c("S", "G") &
                   CategoryCode %in% c("IR"))
 
-ag_withdrawals <- scwaterwithdrawal::wu$WU_monit %>%
-  dplyr::filter(year > 2009) %>%
-  dplyr::semi_join(ag_intakes, 'sourceid') %>%
+ag_withdrawals <- scwaterwithdrawal::wu$WU_monit |>
+  dplyr::filter(year > 2009) |>
+  dplyr::semi_join(ag_intakes, 'sourceid') |>
   dplyr::mutate(
     cufty = total*133680.556,
     acres = (cufty / (10/12))/43560) ## assume 10 inches/yr
@@ -44,17 +46,17 @@ load("..//data//zones.rda")
 It would be preferable to consider the years of reported irrigation and the years of apparent irrigated area, but at this point I will limit the analysis to year 2021.
 
 ```{r}
-ag_withdrawal_acres <- ag_withdrawals %>%
-  dplyr::filter(year==2021) %>%
+ag_withdrawal_acres <- ag_withdrawals |>
+  dplyr::filter(year==2021) |>
   dplyr::select(sourceid, acres)
 
-pts <- ag_intakes %>%
+pts <- ag_intakes |>
   dplyr::inner_join(ag_withdrawal_acres, 'sourceid')
 
-polygons <- zones %>%
-  dplyr::filter(year2021>0) %>%
-  dplyr::select(id_a, Type, Acres) %>%
-  sf::st_transform(sf::st_crs(pts)) %>%
+polygons <- zones |>
+  dplyr::filter(year2021>0) |>
+  dplyr::select(id_a, Type, Acres) |>
+  sf::st_transform(sf::st_crs(pts)) |>
   sf::st_make_valid()
 # class(pts) ## sf, data.frame
 ```
@@ -69,7 +71,7 @@ Remove joins above the maximum distance threshold.
 
 nearest_pt <- sf::st_nearest_feature(polygons, pts)
 
-join1 <- polygons %>%
+join1 <- polygons |>
   dplyr::mutate(
     sourceid = pts[nearest_pt,]$sourceid,
     Acres_pt = pts[nearest_pt,]$acres,
@@ -82,7 +84,7 @@ join1 <- polygons %>%
 
 
 ```{r warning=FALSE}
-join1 %>%
+join1 |>
   ggplot2::ggplot(
     ggplot2::aes(x=distance_ft)) +
   ggplot2::geom_histogram() +
@@ -94,16 +96,16 @@ join1 %>%
 I'll say the maximum distance threshold is 0.5 mile (2,640 ft)
 
 ```{r}
-join2 <- join1 %>%
-  sf::st_drop_geometry() %>%
+join2 <- join1 |>
+  sf::st_drop_geometry() |>
   dplyr::filter(distance_ft < 2640)
 ```
 
 
 ```{r warning=FALSE}
-join2 %>%
-  dplyr::group_by(sourceid, Acres_pt) %>%
-  dplyr::summarise(Acres_polygons = sum(Acres)) %>%
+join2 |>
+  dplyr::group_by(sourceid, Acres_pt) |>
+  dplyr::summarise(Acres_polygons = sum(Acres)) |>
   ggplot2::ggplot(
     ggplot2::aes(x=Acres_pt, y=Acres_polygons)) +
   ggplot2::geom_point(alpha=0.3) +
@@ -123,11 +125,11 @@ For points with much more polygon acreage than point acreage, remove the furthes
 ## select pts with much more polygon acreage than point (volume) acreage
 ## for each of these points, rank the polygons by distance
 ## and calculate the cumulative acreage at each rank.
-join_excess <- join2 %>%
-  dplyr::group_by(sourceid) %>%
-  dplyr::mutate(Acres_polygons = sum(Acres, na.rm=T)) %>%
-  dplyr::filter(Acres_polygons > Acres_pt*2) %>%
-  dplyr::mutate(rank = rank(distance_ft)) %>%
+join_excess <- join2 |>
+  dplyr::group_by(sourceid) |>
+  dplyr::mutate(Acres_polygons = sum(Acres, na.rm=T)) |>
+  dplyr::filter(Acres_polygons > Acres_pt*2) |>
+  dplyr::mutate(rank = rank(distance_ft)) |>
   dplyr::arrange(sourceid, rank)
   
 ## if removal of the lowest ranking polygon brings the acreage closer to the median, 
