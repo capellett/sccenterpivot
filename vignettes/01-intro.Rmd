@@ -12,7 +12,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r echo=F}
+```{r echo=F, eval=F}
 load("../data/opportunities.rda")
 load("../data/zones.rda")
 

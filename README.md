@@ -29,6 +29,12 @@ reliability, or completeness of this information. The SC DNR and
 Dr. Pellett are NOT liable for any loss or damage arising from the use
 of this information.
 
+### How to access the data without using R
+
+Check out the Introduction article on GitHub pages; you’ll find an
+interactive map and a download button for the data.
+<https://capellett.github.io/scpopulation/articles/intro.html>
+
 ### Use in R
 
 `scpopulation` can be installed as an R-package by entering the
