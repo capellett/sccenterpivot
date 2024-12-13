@@ -33,8 +33,8 @@ of this information.
 
 ### How to access the data without using R
 
-Check out the Introduction article on GitHub pages; you’ll find an
-interactive map and download buttons for the data.
+For more information and to download the data (shapefile format), check
+out the Introduction article on GitHub pages:
 <https://capellett.github.io/sccenterpivot/articles/01-intro.html>
 
 ### Use in R

@@ -12,7 +12,6 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-_(Scroll down for the interactive map and download links)_
 ```{r echo=F, include=FALSE, message=F}
 load("../data/opportunities.rda")
 load("../data/zones.rda")
@@ -48,7 +47,36 @@ The irrigation zones are solid data. Maybe the polygon outlines aren't exact to 
 
 The opportunities for center pivot expansion are _not_ solid data, they are speculative and certainly wrong. There is no claim that these areas are actually suitable for irrigation or that they will soon be irrigated. The opportunities/constraints analysis that produced this dataset did not include water availability, as South Carolina's water availability assessments follow these outputs, subsequently. The constraints on irrigation were intentionally exaggerated, including aggregate total developed areas from multiple scenarios of future development. Nevertheless, there is no claim that all "opportunities" for expansion of center pivot sprinklers will ever be irrigated. The purpose of this exercise was to determine if there would be enough irrigable acreage to sustain an expansion of irrigated land by 44% over the next 50 years. These "opportunities" indicate that spatial constraints apparently do not limit such expansion. The opportunities were ranked according to their proximity to existing irrigation and the amount of cultivated area that they overlay. The highest ranking opportunities were selected for projection scenarios as potential locations of future groundwater withdrawal wells for irrigation. This is a rough analysis conducted for state-wide planning efforts; the results are intended to be generally relevant, but actual results at specific locations are expected to vary. 
 
-## Interactive Map
+## Data Download
+
+Use the buttons below to download the datasets as compressed shapefiles.
+
+```{r echo=F}
+# getwd()
+downloadthis::download_file(
+  path = '../data-raw/exports/zones.zip',
+  output_name = 'South Carolina Irrigation Zones',
+  button_label = 'Download irrigation zone data')
+
+downloadthis::download_file(
+  path = '../data-raw/exports/opportunities.zip',
+  output_name = 'South Carolina Center Pivot Opportunities',
+  button_label = 'Download center pivot opportunity data')
+
+```
+
+This might not work in Internet Explorer, try a different browser.
+
+## References
+
+Pellett, C. Alex (2020) "Mapping Center Pivot Irrigation Fields in South Carolina with Google Earth Engine and the National Agricultural Imagery Program," Journal of South Carolina Water Resources: Vol. 7 : Iss. 1 , Article 4. DOI: https://doi.org/10.34068/JSCWR.07.02 Available at: https://tigerprints.clemson.edu/jscwr/vol7/iss1/4
+
+Pellett, CA 2024. "Agricultural Water Use in South Carolina: A Series of Investigations to Support Long-Term Planning." Clemson University Dissertation, December 2024.
+
+Sekaran U, Payero JO. 2023. Mapping and Characterization of Center Pivot and Lateral Move Irrigation Systems in South Carolina Using Quantum Geographic Information System. Journal of South Carolina Water Resources: 9(1), Article 5. Available at: https://tigerprints.clemson.edu/jscwr/vol9/iss1/5 
+
+Zurqani, H. A., Allen, J. S., Post, C. J., Pellett, C. A., & Walker, T. C. (2021). Mapping and quantifying agricultural irrigation in heterogeneous landscapes using Google Earth Engine. Remote Sensing Applications: Society and Environment, 23, 100590.
+
 ```{r echo=F}
 zones_all <- zones |>
   dplyr::mutate(Type = dplyr::if_else(year2021 != 1, 'Inactive', Type)) |>
@@ -97,32 +125,5 @@ leaflet::leaflet(zones_all) |>
   # leaflet::layersControlOptions(collapsed=F)
 ```
 
-## Data Download
 
-Use the buttons below to download the datasets as compressed shapefiles.
 
-```{r echo=F}
-# getwd()
-downloadthis::download_file(
-  path = '../data-raw/exports/zones.zip',
-  output_name = 'South Carolina Irrigation Zones',
-  button_label = 'Download irrigation zone data')
-
-downloadthis::download_file(
-  path = '../data-raw/exports/opportunities.zip',
-  output_name = 'South Carolina Center Pivot Opportunities',
-  button_label = 'Download center pivot opportunity data')
-
-```
-
-This might not work in Internet Explorer, try a different browser.
-
-## References
-
-Pellett, C. Alex (2020) "Mapping Center Pivot Irrigation Fields in South Carolina with Google Earth Engine and the National Agricultural Imagery Program," Journal of South Carolina Water Resources: Vol. 7 : Iss. 1 , Article 4. DOI: https://doi.org/10.34068/JSCWR.07.02 Available at: https://tigerprints.clemson.edu/jscwr/vol7/iss1/4
-
-Pellett, CA 2024. "Agricultural Water Use in South Carolina: A Series of Investigations to Support Long-Term Planning." Clemson University Dissertation, December 2024.
-
-Sekaran U, Payero JO. 2023. Mapping and Characterization of Center Pivot and Lateral Move Irrigation Systems in South Carolina Using Quantum Geographic Information System. Journal of South Carolina Water Resources: 9(1), Article 5. Available at: https://tigerprints.clemson.edu/jscwr/vol9/iss1/5 
-
-Zurqani, H. A., Allen, J. S., Post, C. J., Pellett, C. A., & Walker, T. C. (2021). Mapping and quantifying agricultural irrigation in heterogeneous landscapes using Google Earth Engine. Remote Sensing Applications: Society and Environment, 23, 100590.
