@@ -33,7 +33,7 @@ of this information.
 
 Check out the Introduction article on GitHub pages; you’ll find an
 interactive map and download buttons for the data.
-<https://capellett.github.io/scpopulation/articles/intro.html>
+<https://capellett.github.io/sccenterpivot/articles/intro.html>
 
 ### Use in R
 
