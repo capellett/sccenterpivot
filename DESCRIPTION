@@ -5,17 +5,19 @@ Authors@R: c(
     person("C A", "Pellett", , "c.alex.pellett@gmail.com", role = c("aut", "cre")),
     person("State of South Carolina Department of Natural Resources", role = "fnd")
   )
-Description: What the package does (one paragraph).
+Description: A data package with center pivot irrigation polygons and polygons where center pivot irrigation might be feasible, in South Carolina.
 License: MIT + file LICENSE
 URL: https://github.com/capellett/sccenterpivot, https://capellett.github.io/sccenterpivot/
 BugReports: https://github.com/capellett/sccenterpivot/issues
 Depends: 
-    R (>= 2.10),
+    R (>= 3.5),
     tidyverse
 Suggests: 
     knitr,
     rmarkdown,
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    downloadthis,
+    leaflet
 Config/testthat/edition: 3
 Encoding: UTF-8
 LazyData: true
@@ -23,8 +25,4 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 VignetteBuilder: knitr
 Imports: 
-    downloadthis,
-    leaflet,
     sf
-Remotes: 
-    capellett
