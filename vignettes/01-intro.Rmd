@@ -67,24 +67,18 @@ downloadthis::download_file(
 
 This might not work in Internet Explorer, try a different browser.
 
-## References
-
-Pellett, C. Alex (2020) "Mapping Center Pivot Irrigation Fields in South Carolina with Google Earth Engine and the National Agricultural Imagery Program," Journal of South Carolina Water Resources: Vol. 7 : Iss. 1 , Article 4. DOI: https://doi.org/10.34068/JSCWR.07.02 Available at: https://tigerprints.clemson.edu/jscwr/vol7/iss1/4
-
-Pellett, CA 2024. "Agricultural Water Use in South Carolina: A Series of Investigations to Support Long-Term Planning." Clemson University Dissertation, December 2024.
-
-Sekaran U, Payero JO. 2023. Mapping and Characterization of Center Pivot and Lateral Move Irrigation Systems in South Carolina Using Quantum Geographic Information System. Journal of South Carolina Water Resources: 9(1), Article 5. Available at: https://tigerprints.clemson.edu/jscwr/vol9/iss1/5 
-
-Zurqani, H. A., Allen, J. S., Post, C. J., Pellett, C. A., & Walker, T. C. (2021). Mapping and quantifying agricultural irrigation in heterogeneous landscapes using Google Earth Engine. Remote Sensing Applications: Society and Environment, 23, 100590.
-
-```{r echo=F}
+```{r echo=F, include=F}
 zones_all <- zones |>
   dplyr::mutate(Type = dplyr::if_else(year2021 != 1, 'Inactive', Type)) |>
   dplyr::bind_rows(
     opportunities |>
       dplyr::mutate(Type = dplyr::if_else(projection1, 'Projected Expansion', 'Other Opportunity'),
                     id_a = as.integer(rank1 + 10000)) |>
-      dplyr::select(id_a, Type, Acres=acres))
+      dplyr::select(id_a, Type, Acres=acres)) |>
+  sf::st_make_valid() |>
+  sf::st_simplify(dTolerance=10)
+
+object.size(zones_all)
 ```
 
 ```{r echo=F}
@@ -102,7 +96,8 @@ GetURL <- function(service, host = "basemap.nationalmap.gov") {
 ```
 
 ```{r echo=F}
-m <- leaflet::leaflet(zones_all) |>
+m <- zones_all |>
+  leaflet::leaflet() |>
   leaflet::addPolygons(
     # data = zones_all,
     group = ~Type,
@@ -122,9 +117,40 @@ m <- leaflet::leaflet(zones_all) |>
 
   leaflet::addLayersControl(
     baseGroups = c('OpenStreetMap', 'USGS Imagery'), overlayGroups = ~Type) # |>
-  # leaflet::layersControlOptions(collapsed=F)
+ # leaflet::layersControlOptions(collapsed=F)
+```
 
-(m)
+```{r}
+m
+```
+
+## References
+
+Pellett, C. Alex (2020) "Mapping Center Pivot Irrigation Fields in South Carolina with Google Earth Engine and the National Agricultural Imagery Program," Journal of South Carolina Water Resources: Vol. 7 : Iss. 1 , Article 4. DOI: https://doi.org/10.34068/JSCWR.07.02 Available at: https://tigerprints.clemson.edu/jscwr/vol7/iss1/4
+
+Pellett, CA 2024. "Agricultural Water Use in South Carolina: A Series of Investigations to Support Long-Term Planning." Clemson University Dissertation, December 2024.
+
+Sekaran U, Payero JO. 2023. Mapping and Characterization of Center Pivot and Lateral Move Irrigation Systems in South Carolina Using Quantum Geographic Information System. Journal of South Carolina Water Resources: 9(1), Article 5. Available at: https://tigerprints.clemson.edu/jscwr/vol9/iss1/5 
+
+Zurqani, H. A., Allen, J. S., Post, C. J., Pellett, C. A., & Walker, T. C. (2021). Mapping and quantifying agricultural irrigation in heterogeneous landscapes using Google Earth Engine. Remote Sensing Applications: Society and Environment, 23, 100590.
+
+
+
+```{r}
+## This doesn't work.
+
+# install.packages('mapview')
+# install.packages('webshot')
+# library(mapview)
+# mapview::mapshot(m, file='m.html')
+```
+
+```{r}
+## This seems to work.
+
+# library(leaflet)
+# library(htmlwidgets)
+# htmlwidgets::saveWidget(widget=m, file='m.html')
 ```
 
 
