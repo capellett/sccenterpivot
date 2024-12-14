@@ -120,7 +120,7 @@ m <- zones_all |>
  # leaflet::layersControlOptions(collapsed=F)
 ```
 
-```{r}
+```{r echo=F}
 m
 ```
 
